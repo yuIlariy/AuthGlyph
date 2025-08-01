@@ -1,23 +1,55 @@
 import re
+import subprocess
 import requests
-from config import AUTH_LOG_PATH, GEO_API
+from config import GEO_API, AUTH_LOG_PATH
+
+# Supported login patterns
+LOGIN_PATTERNS = [
+    r"Accepted password for (\w+) from ([\d\.]+)",
+    r"Accepted publickey for (\w+) from ([\d\.]+)",
+    r"Accepted keyboard-interactive/pam for (\w+) from ([\d\.]+)"
+]
+
+def read_auth_log():
+    try:
+        with open(AUTH_LOG_PATH, "r") as f:
+            return f.readlines()
+    except FileNotFoundError:
+        try:
+            output = subprocess.check_output(
+                ["journalctl", "-u", "sshd", "--no-pager", "--no-hostname"],
+                text=True
+            )
+            return output.splitlines()
+        except Exception as e:
+            print(f"[ERROR] Failed to read logs: {e}")
+            return []
+
+def extract_login(line):
+    for pattern in LOGIN_PATTERNS:
+        match = re.search(pattern, line)
+        if match:
+            user = match.group(1)
+            ip = match.group(2)
+            time = " ".join(line.split()[0:3])
+            return ip, user, time
+    return None
 
 def get_last_login():
-    with open(AUTH_LOG_PATH, "r") as f:
-        lines = f.readlines()
+    lines = read_auth_log()
     for line in reversed(lines):
-        if "Accepted password" in line:
-            match = re.search(r"Accepted password for (\w+) from ([\d\.]+)", line)
-            if match:
-                user = match.group(1)
-                ip = match.group(2)
-                time = " ".join(line.split()[0:3])
-                return ip, user, time
+        result = extract_login(line)
+        if result:
+            return result
     return "N/A", "N/A", "N/A"
 
 def geo_lookup(ip):
     try:
-        r = requests.get(GEO_API + ip).json()
-        return f"{r.get('city')}, {r.get('country')} 🌐"
-    except:
+        r = requests.get(GEO_API + ip, timeout=5).json()
+        city = r.get("city", "Unknown")
+        country = r.get("country", "Unknown")
+        return f"{city}, {country} 🌐"
+    except Exception as e:
+        print(f"[WARN] Geo lookup failed for {ip}: {e}")
         return "Unknown 🌫️"
+        
