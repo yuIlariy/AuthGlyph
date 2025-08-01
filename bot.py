@@ -7,7 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
-from utils.authlog import get_last_login, geo_lookup
+from utils.monitor_logins import get_last_login, geo_lookup  # ← updated module
 from utils.captions import themed_caption
 
 # 🦔 Bot setup
