@@ -61,3 +61,15 @@ def country_flag(code):
     return chr(ord(code[0].upper()) + 127397) + chr(ord(code[1].upper()) + 127397)
 
 
+_login_counter = 0
+_last_login = ("N/A", "N/A", "N/A")
+
+def record_login(ip, user, time):
+    global _last_login, _login_counter
+    _last_login = (ip, user, time)
+    _login_counter += 1
+
+def get_login_count():
+    return _login_counter
+
+
