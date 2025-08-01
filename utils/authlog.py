@@ -21,4 +21,3 @@ def geo_lookup(ip):
         return f"{r.get('city')}, {r.get('country')} 🌐"
     except:
         return "Unknown 🌫️"
-      
