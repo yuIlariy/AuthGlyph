@@ -48,8 +48,16 @@ def geo_lookup(ip):
         r = requests.get(GEO_API + ip, timeout=5).json()
         city = r.get("city", "Unknown")
         country = r.get("country", "Unknown")
-        return f"{city}, {country} 🌐"
+        code = r.get("countryCode", "")
+        flag = country_flag(code)
+        return f"{city}, {country} {flag}"
     except Exception as e:
         print(f"[WARN] Geo lookup failed for {ip}: {e}")
         return "Unknown 🌫️"
-        
+
+def country_flag(code):
+    if not code or len(code) != 2:
+        return ""
+    return chr(ord(code[0].upper()) + 127397) + chr(ord(code[1].upper()) + 127397)
+
+
