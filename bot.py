@@ -7,7 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
-from utils.monitor_logins import get_last_login, geo_lookup  # ← updated module
+from utils.authlog import get_last_login, geo_lookup  # ✅ Corrected import
 from utils.captions import themed_caption
 
 # 🦔 Bot setup
@@ -56,3 +56,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
