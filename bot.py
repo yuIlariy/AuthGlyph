@@ -20,14 +20,19 @@ _last_alert = None  # 🧠 Prevent duplicate alerts
 # 🔥 Auto-monitoring loop
 async def monitor_logins():
     global _last_alert
+    print("🌋 Auth monitor loop started.")
     while True:
-        ip, user, time = get_last_login()
-        alert_key = f"{user}|{ip}|{time}"
-        if alert_key != _last_alert and ip != "N/A":
-            geo = geo_lookup(ip)
-            caption = themed_caption(ip, user, time, geo)
-            await bot.send_message(chat_id=ADMIN_ID, text=caption)
-            _last_alert = alert_key
+        try:
+            ip, user, time = get_last_login()
+            alert_key = f"{user}|{ip}|{time}"
+            if alert_key != _last_alert and ip != "N/A":
+                geo = geo_lookup(ip)
+                caption = themed_caption(ip, user, time, geo)
+                await bot.send_message(chat_id=ADMIN_ID, text=caption)
+                print(f"🦔 Alert sent for {user} @ {ip}")
+                _last_alert = alert_key
+        except Exception as e:
+            print(f"⚠️ Auth monitor error: {e}")
         await asyncio.sleep(10)  # ⏱️ Poll every 10 seconds
 
 # 🧠 Start command
@@ -43,6 +48,7 @@ async def start_handler(msg: Message):
         )
     )
 
+# 🚀 Main entry
 async def main():
     print("🦔 AuthGlyph deployed successfully.")
     asyncio.create_task(monitor_logins())  # 🔥 Start monitoring
