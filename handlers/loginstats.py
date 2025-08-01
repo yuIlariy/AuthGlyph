@@ -1,8 +1,7 @@
 from aiogram import Router
 from aiogram.types import Message
 from config import ADMIN_ID
-from utils.authlog import get_last_login, get_login_count
-from utils.geo import geo_lookup  # optional if geo is split
+from utils.authlog import get_last_login, get_login_count, geo_lookup  # ✅ All from authlog
 
 router = Router()
 
@@ -20,4 +19,3 @@ async def loginstats(msg: Message):
         f"🌍 <b>Location:</b> {geo}"
     )
     await msg.answer(caption)
-  
