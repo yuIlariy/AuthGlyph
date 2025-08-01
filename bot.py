@@ -7,11 +7,28 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
+from utils.authlog import get_last_login, geo_lookup
+from utils.captions import themed_caption
 
 # 🦔 Bot setup
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(authwatch_router)
+
+_last_alert = None  # 🧠 Prevent duplicate alerts
+
+# 🔥 Auto-monitoring loop
+async def monitor_logins():
+    global _last_alert
+    while True:
+        ip, user, time = get_last_login()
+        alert_key = f"{user}|{ip}|{time}"
+        if alert_key != _last_alert and ip != "N/A":
+            geo = geo_lookup(ip)
+            caption = themed_caption(ip, user, time, geo)
+            await bot.send_message(chat_id=ADMIN_ID, text=caption)
+            _last_alert = alert_key
+        await asyncio.sleep(10)  # ⏱️ Poll every 10 seconds
 
 # 🧠 Start command
 @dp.message(lambda msg: msg.text == "/start" and msg.from_user.id == ADMIN_ID)
@@ -28,6 +45,7 @@ async def start_handler(msg: Message):
 
 async def main():
     print("🦔 AuthGlyph deployed successfully.")
+    asyncio.create_task(monitor_logins())  # 🔥 Start monitoring
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
