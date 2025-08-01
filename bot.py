@@ -7,13 +7,15 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
-from utils.authlog import get_last_login, geo_lookup  # ✅ Corrected import
+from handlers.loginstats import router as loginstats_router  # ✅ Include this
+from utils.authlog import get_last_login, geo_lookup, record_login  # ✅ record_login
 from utils.captions import themed_caption
 
 # 🦔 Bot setup
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(authwatch_router)
+dp.include_router(loginstats_router)  # ✅ Register loginstats router
 
 _last_alert = None  # 🧠 Prevent duplicate alerts
 
@@ -31,9 +33,10 @@ async def monitor_logins():
                 await bot.send_message(chat_id=ADMIN_ID, text=caption)
                 print(f"🦔 Alert sent for {user} @ {ip}")
                 _last_alert = alert_key
+                record_login(ip, user, time)  # ✅ Track grouped stats
         except Exception as e:
             print(f"⚠️ Auth monitor error: {e}")
-        await asyncio.sleep(10)  # ⏱️ Poll every 10 seconds
+        await asyncio.sleep(10)
 
 # 🧠 Start command
 @dp.message(lambda msg: msg.text == "/start" and msg.from_user.id == ADMIN_ID)
@@ -43,7 +46,7 @@ async def start_handler(msg: Message):
         caption=(
             "<b>🦔 AuthGlyph Activated</b>\n\n"
             "🌋 Monitoring login events with geo awareness and glyph precision.\n"
-            "📍 Use /authstats to view the latest login.\n"
+            "📍 Use /authstats or /loginstats to view the latest login.\n"
             "🧠 More modules coming soon — breach detection, heatmaps, and more."
         )
     )
@@ -51,7 +54,7 @@ async def start_handler(msg: Message):
 # 🚀 Main entry
 async def main():
     print("🦔 AuthGlyph deployed successfully.")
-    asyncio.create_task(monitor_logins())  # 🔥 Start monitoring
+    asyncio.create_task(monitor_logins())
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
