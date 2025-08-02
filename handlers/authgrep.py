@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import Message
 from config import ADMIN_ID
-from utils.authlog import search_logins, get_login_count, _login_records
+from utils.authlog import search_logins, get_login_count, _login_records, is_foreign
 from utils.glyphs import flag_emoji
 
 router = Router()
@@ -35,7 +35,7 @@ async def authgrep(msg: Message):
 
     # 🔥 Suspicious mode — filter foreign logins
     if query == "suspicious":
-        matches = [entry for entry in _login_records if entry.get("country", "").upper() != "KE"]
+        matches = [entry for entry in _login_records if is_foreign(entry)]
         if not matches:
             await msg.answer("🌍 No suspicious logins found outside Kenya 🇰🇪", parse_mode="HTML")
             return
@@ -84,5 +84,4 @@ async def authgrep(msg: Message):
         )
 
     await msg.answer("\n".join(lines), parse_mode="HTML")
-
 
