@@ -73,3 +73,23 @@ def get_login_count():
     return _login_counter
 
 
+_login_records = []
+
+def record_login(ip, user, time, country=""):
+    _login_records.append({
+        "ip": ip,
+        "user": user,
+        "time": time,
+        "country": country
+    })
+
+def search_logins(query: str):
+    query = query.lower()
+    return [
+        entry for entry in _login_records
+        if query in entry["user"].lower()
+        or query in entry["ip"].lower()
+        or query in entry.get("country", "").lower()
+    ]
+
+
