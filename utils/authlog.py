@@ -56,7 +56,7 @@ def get_last_login():
             return result
     return "N/A", "N/A", "N/A"
 
-# 🌍 Geo IP lookup with country flag and code + WHOIS type
+# 🌍 Geo IP lookup with country flag and WHOIS glyph
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
@@ -65,16 +65,18 @@ def geo_lookup(ip):
         code = r.get("countryCode", "").upper()
         flag = country_flag(code)
 
-        # 🛰️ WHOIS type detection
-        org = r.get("org", "").lower()
-        isp = r.get("isp", "").lower()
-        is_proxy = r.get("proxy", False)
-        is_hosting = r.get("hosting", False)
+        # 🛰️ WHOIS type detection from security block
+        sec = r.get("security", {})
+        vpn = sec.get("vpn", False)
+        hosting = sec.get("hosting", False)
+        anon = sec.get("anonymous", False)
 
-        if is_proxy or "vpn" in org or "vpn" in isp or "proxy" in org:
+        if vpn:
             whois_type = f"VPN {flag}"
-        elif is_hosting or "hosting" in org or "cloud" in org or "colo" in org:
+        elif hosting:
             whois_type = f"Hosting {flag}"
+        elif anon:
+            whois_type = f"Anonymous {flag}"
         else:
             whois_type = f"Residential {flag}"
 
