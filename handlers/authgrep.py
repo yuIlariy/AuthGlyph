@@ -15,7 +15,17 @@ def safe_flag(code: str) -> str:
 async def authgrep(msg: Message):
     args = msg.text.split(maxsplit=1)
     if len(args) < 2:
-        await msg.answer("🧠 Usage: <code>/authgrep &lt;query&gt;</code>", parse_mode="HTML")
+        examples = (
+            "🧠 <b>AuthGlyph Trace Examples</b>\n\n"
+            "Try one of these:\n"
+            "• 👤 <code>/authgrep root</code> — by username\n"
+            "• 🌐 <code>/authgrep 102.219</code> — by IP fragment\n"
+            "• 🧬 <code>/authgrep US</code> — by country code\n"
+            "• 🔎 <code>/authgrep adm</code> — partial match\n\n"
+            "📊 Each result shows timestamp, IP, and country flag.\n"
+            "🌍 Foreign logins are auto-flagged as suspicious."
+        )
+        await msg.answer(examples, parse_mode="HTML")
         return
 
     query = args[1].strip()
@@ -38,5 +48,4 @@ async def authgrep(msg: Message):
         lines.append(f"🧍 <b>{user}</b>\n • {time} — <code>{ip}</code> {flag}")
 
     await msg.answer("\n".join(lines), parse_mode="HTML")
-
 
