@@ -92,6 +92,10 @@ def load_login_stats():
         try:
             with open(STATS_FILE, "r") as f:
                 _login_records = json.load(f)
+                # ✅ Normalize country codes on load
+                for entry in _login_records:
+                    if "country" in entry and isinstance(entry["country"], str):
+                        entry["country"] = entry["country"].upper()
                 _login_counter = len(_login_records)
         except Exception as e:
             print(f"[ERROR] Failed to load login stats: {e}")
@@ -128,5 +132,3 @@ def search_logins(query: str):
 # 🔥 Foreign login check
 def is_foreign(entry: dict) -> bool:
     return entry.get("country", "").upper() != BASE_COUNTRY_CODE
-
-
