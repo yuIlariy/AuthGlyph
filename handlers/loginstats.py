@@ -2,7 +2,6 @@ from aiogram import Router
 from aiogram.types import Message
 from config import ADMIN_ID
 from utils.authlog import get_last_login, get_login_count, geo_lookup
-from utils.whois import whois_info  # ✅ WHOIS module
 
 router = Router()
 
@@ -10,8 +9,7 @@ router = Router()
 async def loginstats(msg: Message):
     ip, user, time = get_last_login()
     count = get_login_count()
-    geo_str, _ = geo_lookup(ip)
-    whois = whois_info(ip)  # ✅ WHOIS lookup
+    geo_str, _, whois = geo_lookup(ip)  # ✅ WHOIS from geo_lookup
 
     caption = (
         f"📊 <b>Login Stats</b>\n"
@@ -23,5 +21,4 @@ async def loginstats(msg: Message):
         f"🛰️ <b>WHOIS:</b> <code>{whois}</code>"
     )
     await msg.answer(caption)
-
 
