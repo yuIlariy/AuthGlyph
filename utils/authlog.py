@@ -17,8 +17,7 @@ _login_records = []
 _login_counter = 0
 _last_login = ("N/A", "N/A", "N/A")
 
-STATS_FILE = "logs/logins.json"
-BASE_COUNTRY_CODE = "KE"  # ☄️ Kenya is home
+STATS_FILE = "logs/logins.json"  # ✅ Persistent storage path
 
 # 🔍 Read system logs
 def read_auth_log():
@@ -56,36 +55,19 @@ def get_last_login():
             return result
     return "N/A", "N/A", "N/A"
 
-# 🌍 Geo IP lookup with country flag and WHOIS glyph
+# 🌍 Geo IP lookup with country flag and code
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
-
         city = r.get("city", "Unknown")
-        country = r.get("country_name", "Unknown")
-        code = r.get("country_code2", "").upper()
-
-        if not code or len(code) != 2 or not code.isalpha():
-            code = "ZZ"  # 🌫️ Unknown country
-
+        country = r.get("country", "Unknown")
+        code = r.get("countryCode", "")
         flag = country_flag(code)
-
-        is_proxy = r.get("is_proxy", False)
-        is_anonymous = r.get("is_anonymous", False)
-        is_hosting = r.get("is_hosting", False)
-
-        if is_proxy or is_anonymous:
-            whois_type = f"VPN {flag}"
-        elif is_hosting:
-            whois_type = f"Hosting {flag}"
-        else:
-            whois_type = f"Residential {flag}"
-
         geo_str = f"{city}, {country} {flag}"
-        return geo_str, code, whois_type
+        return geo_str, code
     except Exception as e:
         print(f"[WARN] Geo lookup failed for {ip}: {e}")
-        return "Unknown 🌫️", "ZZ", "Unknown 🌫️"
+        return "Unknown 🌫️", ""
 
 # 🏳️ Convert country code to emoji flag
 def country_flag(code):
@@ -109,41 +91,22 @@ def load_login_stats():
         try:
             with open(STATS_FILE, "r") as f:
                 _login_records = json.load(f)
-                for entry in _login_records:
-                    if "country" in entry and isinstance(entry["country"], str):
-                        entry["country"] = entry["country"].upper()
                 _login_counter = len(_login_records)
         except Exception as e:
             print(f"[ERROR] Failed to load login stats: {e}")
 
 # 🧾 Record login for stats and grep
-def record_login(ip, user, time, country="", whois="Unknown"):
+def record_login(ip, user, time, country=""):
     global _last_login, _login_counter
     _last_login = (ip, user, time)
     _login_counter += 1
-    country = country.upper() if country else "ZZ"
     _login_records.append({
         "ip": ip,
         "user": user,
         "time": time,
-        "country": country,
-        "whois": whois
+        "country": country
     })
-    save_login_stats()
-
-# 🧼 Retrofix broken country codes
-def fix_login_records():
-    fixed = 0
-    for entry in _login_records:
-        code = entry.get("country", "").upper()
-        if not code or len(code) != 2 or not code.isalpha():
-            geo_str, new_code, whois = geo_lookup(entry["ip"])
-            entry["country"] = new_code
-            entry["whois"] = whois
-            fixed += 1
-    if fixed:
-        save_login_stats()
-    return fixed
+    save_login_stats()  # ✅ Persist after each login
 
 # 📊 Total login count
 def get_login_count():
@@ -157,12 +120,8 @@ def search_logins(query: str):
         if query in entry["user"].lower()
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
-        or query in entry.get("whois", "").lower()
     ]
 
-# 🔥 Foreign login check
-def is_foreign(entry: dict) -> bool:
-    code = entry.get("country", "").upper()
-    return code != BASE_COUNTRY_CODE
+
 
 
