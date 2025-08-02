@@ -24,7 +24,6 @@ async def authgrep(msg: Message):
             "• 🌐 <code>/authgrep 102.219</code> — by IP fragment\n"
             "• 🧬 <code>/authgrep US</code> — by country code\n"
             "• 🔎 <code>/authgrep adm</code> — partial match\n"
-            "• 🛰️ <code>/authgrep nordvpn</code> — by WHOIS ISP/ASN\n"
             "• 🔥 <code>/authgrep suspicious</code> — foreign logins only\n\n"
             "📊 Each result shows timestamp, IP, country flag, and WHOIS info."
         )
