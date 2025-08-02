@@ -56,7 +56,7 @@ def get_last_login():
             return result
     return "N/A", "N/A", "N/A"
 
-# 🌍 Geo IP lookup with country flag and code
+# 🌍 Geo IP lookup with country flag and code + WHOIS type
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
@@ -64,11 +64,25 @@ def geo_lookup(ip):
         country = r.get("country", "Unknown")
         code = r.get("countryCode", "").upper()
         flag = country_flag(code)
+
+        # 🛰️ WHOIS type detection
+        org = r.get("org", "").lower()
+        isp = r.get("isp", "").lower()
+        is_proxy = r.get("proxy", False)
+        is_hosting = r.get("hosting", False)
+
+        if is_proxy or "vpn" in org or "vpn" in isp or "proxy" in org:
+            whois_type = f"VPN {flag}"
+        elif is_hosting or "hosting" in org or "cloud" in org or "colo" in org:
+            whois_type = f"Hosting {flag}"
+        else:
+            whois_type = f"Residential {flag}"
+
         geo_str = f"{city}, {country} {flag}"
-        return geo_str, code
+        return geo_str, code, whois_type
     except Exception as e:
         print(f"[WARN] Geo lookup failed for {ip}: {e}")
-        return "Unknown 🌫️", ""
+        return "Unknown 🌫️", "", "Unknown 🌫️"
 
 # 🏳️ Convert country code to emoji flag
 def country_flag(code):
@@ -92,7 +106,6 @@ def load_login_stats():
         try:
             with open(STATS_FILE, "r") as f:
                 _login_records = json.load(f)
-                # ✅ Normalize country codes on load
                 for entry in _login_records:
                     if "country" in entry and isinstance(entry["country"], str):
                         entry["country"] = entry["country"].upper()
@@ -109,7 +122,7 @@ def record_login(ip, user, time, country="", whois="Unknown"):
         "ip": ip,
         "user": user,
         "time": time,
-        "country": country.upper(),  # ✅ Normalize to ISO code
+        "country": country.upper(),
         "whois": whois
     })
     save_login_stats()
@@ -132,3 +145,5 @@ def search_logins(query: str):
 # 🔥 Foreign login check
 def is_foreign(entry: dict) -> bool:
     return entry.get("country", "").upper() != BASE_COUNTRY_CODE
+
+
