@@ -61,20 +61,15 @@ def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
 
-        # 🌍 Location fields
         city = r.get("city", "Unknown")
         country = r.get("country_name", "Unknown")
         code = r.get("country_code2", "").upper()
 
-        # 🛡️ Fallback if code is missing but country is known
-        if not code and country and len(country) == 2:
-            code = country.upper()
         if not code or len(code) != 2 or not code.isalpha():
             code = "ZZ"  # 🌫️ Unknown country
 
         flag = country_flag(code)
 
-        # 🛰️ WHOIS type detection from IPGeolocation.io
         is_proxy = r.get("is_proxy", False)
         is_anonymous = r.get("is_anonymous", False)
         is_hosting = r.get("is_hosting", False)
@@ -136,6 +131,20 @@ def record_login(ip, user, time, country="", whois="Unknown"):
     })
     save_login_stats()
 
+# 🧼 Retrofix broken country codes
+def fix_login_records():
+    fixed = 0
+    for entry in _login_records:
+        code = entry.get("country", "").upper()
+        if not code or len(code) != 2 or not code.isalpha():
+            geo_str, new_code, whois = geo_lookup(entry["ip"])
+            entry["country"] = new_code
+            entry["whois"] = whois
+            fixed += 1
+    if fixed:
+        save_login_stats()
+    return fixed
+
 # 📊 Total login count
 def get_login_count():
     return _login_counter
@@ -155,4 +164,5 @@ def search_logins(query: str):
 def is_foreign(entry: dict) -> bool:
     code = entry.get("country", "").upper()
     return code != BASE_COUNTRY_CODE
+
 
