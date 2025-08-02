@@ -56,18 +56,22 @@ suspicious_themes = [
     "🧱 <b>Firewall Breach</b>",
 ]
 
-def themed_caption(ip, user, time, geo):
-    # Extract country code from geo string
+def themed_caption(ip, user, time, geo, whois=None):
     country_flag = geo.split()[-1] if geo else ""
     is_foreign = country_flag != "🇰🇪"
-
     theme = random.choice(suspicious_themes if is_foreign else themes)
-    return (
+
+    caption = (
         f"{theme}\n"
         f"👤 <b>User:</b> <code>{user}</code>\n"
         f"🕒 <b>Time:</b> <code>{time}</code>\n"
         f"🌐 <b>IP:</b> <code>{ip}</code>\n"
         f"🌍 <b>Location:</b> {geo}"
     )
+
+    if whois:
+        caption += f"\n🛰️ <b>WHOIS:</b> <code>{whois}</code>"
+
+    return caption
 
 
