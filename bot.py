@@ -11,7 +11,6 @@ from handlers.loginstats import router as loginstats_router
 from handlers.authgrep import router as authgrep_router
 from utils.authlog import get_last_login, geo_lookup, record_login, load_login_stats
 from utils.captions import themed_caption
-from utils.whois import whois_info  # ✅ WHOIS module
 
 # 🦔 Bot setup
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -31,13 +30,12 @@ async def monitor_logins():
             ip, user, time = get_last_login()
             alert_key = f"{user}|{ip}|{time}"
             if alert_key != _last_alert and ip != "N/A":
-                geo_str, country_code = geo_lookup(ip)
-                whois = whois_info(ip)  # ✅ Get WHOIS info
-                caption = themed_caption(ip, user, time, geo_str, whois)  # ✅ Modular caption
+                geo_str, country_code, whois = geo_lookup(ip)  # ✅ WHOIS from geo_lookup
+                caption = themed_caption(ip, user, time, geo_str, whois)
                 await bot.send_message(chat_id=ADMIN_ID, text=caption)
                 print(f"🦔 Alert sent for {user} @ {ip}")
                 _last_alert = alert_key
-                record_login(ip, user, time, country_code, whois)  # ✅ Persist WHOIS
+                record_login(ip, user, time, country_code, whois)
         except Exception as e:
             print(f"⚠️ Auth monitor error: {e}")
         await asyncio.sleep(10)
@@ -64,4 +62,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
