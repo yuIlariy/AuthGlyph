@@ -1,6 +1,8 @@
 import re
 import subprocess
 import requests
+import json
+import os
 from config import GEO_API, AUTH_LOG_PATH
 
 # 🧠 Supported login patterns
@@ -14,6 +16,8 @@ LOGIN_PATTERNS = [
 _login_records = []
 _login_counter = 0
 _last_login = ("N/A", "N/A", "N/A")
+
+STATS_FILE = "logs/logins.json"  # ✅ Persistent storage path
 
 # 🔍 Read system logs
 def read_auth_log():
@@ -60,7 +64,7 @@ def geo_lookup(ip):
         code = r.get("countryCode", "")
         flag = country_flag(code)
         geo_str = f"{city}, {country} {flag}"
-        return geo_str, code  # ✅ return both
+        return geo_str, code
     except Exception as e:
         print(f"[WARN] Geo lookup failed for {ip}: {e}")
         return "Unknown 🌫️", ""
@@ -70,6 +74,26 @@ def country_flag(code):
     if not code or len(code) != 2 or not code.isalpha():
         return "🌍"
     return chr(ord(code[0].upper()) + 127397) + chr(ord(code[1].upper()) + 127397)
+
+# 💾 Save login records to disk
+def save_login_stats():
+    try:
+        os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+        with open(STATS_FILE, "w") as f:
+            json.dump(_login_records, f, indent=2)
+    except Exception as e:
+        print(f"[ERROR] Failed to save login stats: {e}")
+
+# 🔁 Load login records from disk
+def load_login_stats():
+    global _login_records, _login_counter
+    if os.path.exists(STATS_FILE):
+        try:
+            with open(STATS_FILE, "r") as f:
+                _login_records = json.load(f)
+                _login_counter = len(_login_records)
+        except Exception as e:
+            print(f"[ERROR] Failed to load login stats: {e}")
 
 # 🧾 Record login for stats and grep
 def record_login(ip, user, time, country=""):
@@ -82,6 +106,7 @@ def record_login(ip, user, time, country=""):
         "time": time,
         "country": country
     })
+    save_login_stats()  # ✅ Persist after each login
 
 # 📊 Total login count
 def get_login_count():
@@ -96,5 +121,4 @@ def search_logins(query: str):
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
     ]
-
 
