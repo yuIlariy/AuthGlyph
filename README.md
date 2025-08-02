@@ -1,4 +1,4 @@
 # AuthGlyph-
 Glyph VPS Auth monitor 🌋
 
-`Beta version👻 all logins from 🇰🇪 're marked suspicious ☄️`
+`Beta version👻 all logins outside 🇰🇪 're marked suspicious ☄️`
