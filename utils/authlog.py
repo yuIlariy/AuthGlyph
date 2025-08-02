@@ -60,11 +60,18 @@ def get_last_login():
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
+
+        # 🌍 Location fields
         city = r.get("city", "Unknown")
         country = r.get("country_name", "Unknown")
         code = r.get("country_code2", "").upper()
-        if not code or len(code) != 2:
+
+        # 🛡️ Fallback if code is missing but country is known
+        if not code and country and len(country) == 2:
+            code = country.upper()
+        if not code or len(code) != 2 or not code.isalpha():
             code = "ZZ"  # 🌫️ Unknown country
+
         flag = country_flag(code)
 
         # 🛰️ WHOIS type detection from IPGeolocation.io
