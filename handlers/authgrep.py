@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import Message
 from config import ADMIN_ID
-from utils.authlog import search_logins, get_login_count, _login_records, is_foreign
+from utils.authlog import search_logins, get_login_count
 from utils.glyphs import flag_emoji
 
 router = Router()
@@ -25,7 +25,8 @@ async def authgrep(msg: Message):
             "• 🧬 <code>/authgrep US</code> — by country code\n"
             "• 🔎 <code>/authgrep adm</code> — partial match\n"
             "• 🔥 <code>/authgrep suspicious</code> — foreign logins only\n\n"
-            "📊 Each result shows timestamp, IP, country flag, and WHOIS info."
+            "📊 Each result shows timestamp, IP, and country flag.\n"
+            "🌍 Foreign logins are auto-flagged as suspicious."
         )
         await msg.answer(examples, parse_mode="HTML")
         return
@@ -34,7 +35,8 @@ async def authgrep(msg: Message):
 
     # 🔥 Suspicious mode — filter foreign logins
     if query == "suspicious":
-        matches = [entry for entry in _login_records if is_foreign(entry)]
+        from utils.authlog import _login_records  # direct access
+        matches = [entry for entry in _login_records if entry.get("country", "").upper() != "KE"]
         if not matches:
             await msg.answer("🌍 No suspicious logins found outside Kenya 🇰🇪", parse_mode="HTML")
             return
@@ -48,13 +50,8 @@ async def authgrep(msg: Message):
             ip = entry['ip']
             time = entry['time']
             country = entry.get('country', '')
-            whois = entry.get('whois', 'Unknown')
             flag = safe_flag(country)
-            lines.append(
-                f"{whois}\n"
-                f"🧍 <b>{user}</b>\n"
-                f" • {time} — <code>{ip}</code> {flag}"
-            )
+            lines.append(f"🧍 <b>{user}</b>\n • {time} — <code>{ip}</code> {flag}")
 
         await msg.answer("\n".join(lines), parse_mode="HTML")
         return
@@ -74,14 +71,9 @@ async def authgrep(msg: Message):
         ip = entry['ip']
         time = entry['time']
         country = entry.get('country', '')
-        whois = entry.get('whois', 'Unknown')
         flag = safe_flag(country)
-        lines.append(
-            f"{whois}\n"
-            f"🧍 <b>{user}</b>\n"
-            f" • {time} — <code>{ip}</code> {flag}"
-        )
+        lines.append(f"🧍 <b>{user}</b>\n • {time} — <code>{ip}</code> {flag}")
 
     await msg.answer("\n".join(lines), parse_mode="HTML")
 
-
+    
