@@ -51,9 +51,9 @@ async def authgrep(msg: Message):
             whois = entry.get('whois', 'Unknown')
             flag = safe_flag(country)
             lines.append(
+                f"{whois}\n"
                 f"🧍 <b>{user}</b>\n"
-                f" • {time} — <code>{ip}</code> {flag}\n"
-                f" 🛰️ <code>{whois}</code>"
+                f" • {time} — <code>{ip}</code> {flag}"
             )
 
         await msg.answer("\n".join(lines), parse_mode="HTML")
@@ -77,10 +77,11 @@ async def authgrep(msg: Message):
         whois = entry.get('whois', 'Unknown')
         flag = safe_flag(country)
         lines.append(
+            f"{whois}\n"
             f"🧍 <b>{user}</b>\n"
-            f" • {time} — <code>{ip}</code> {flag}\n"
-            f" 🛰️ <code>{whois}</code>"
+            f" • {time} — <code>{ip}</code> {flag}"
         )
 
     await msg.answer("\n".join(lines), parse_mode="HTML")
+
 
