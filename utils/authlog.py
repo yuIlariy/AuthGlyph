@@ -51,7 +51,7 @@ def get_last_login():
             return result
     return "N/A", "N/A", "N/A"
 
-# 🌍 Geo IP lookup with country flag
+# 🌍 Geo IP lookup with country flag and code
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
@@ -59,14 +59,16 @@ def geo_lookup(ip):
         country = r.get("country", "Unknown")
         code = r.get("countryCode", "")
         flag = country_flag(code)
-        return f"{city}, {country} {flag}"
+        geo_str = f"{city}, {country} {flag}"
+        return geo_str, code  # ✅ return both
     except Exception as e:
         print(f"[WARN] Geo lookup failed for {ip}: {e}")
-        return "Unknown 🌫️"
+        return "Unknown 🌫️", ""
 
+# 🏳️ Convert country code to emoji flag
 def country_flag(code):
-    if not code or len(code) != 2:
-        return ""
+    if not code or len(code) != 2 or not code.isalpha():
+        return "🌍"
     return chr(ord(code[0].upper()) + 127397) + chr(ord(code[1].upper()) + 127397)
 
 # 🧾 Record login for stats and grep
@@ -94,4 +96,5 @@ def search_logins(query: str):
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
     ]
+
 
