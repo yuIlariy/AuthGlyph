@@ -1,5 +1,6 @@
 import random
 
+# 🌋 Themes for normal logins
 themes = [
     "🦔 <b>Sentinel Mode</b>",
     "🌋 <b>Breach Watch</b>",
@@ -41,8 +42,26 @@ themes = [
     "🧬 <b>DNA Trace</b>",
 ]
 
+# 🔥 Suspicious themes for foreign logins
+suspicious_themes = [
+    "🚨 <b>Suspicious Login</b>",
+    "🧨 <b>Foreign Breach</b>",
+    "🕷️ <b>Unusual Access</b>",
+    "🛑 <b>Alert: External Shell</b>",
+    "🧟 <b>Zombie Ping</b>",
+    "🧛 <b>Vampire Trace</b>",
+    "🧬 <b>Unknown Genome</b>",
+    "🧠 <b>Alien Session</b>",
+    "🧿 <b>Glyph Intrusion</b>",
+    "🧱 <b>Firewall Breach</b>",
+]
+
 def themed_caption(ip, user, time, geo):
-    theme = random.choice(themes)
+    # Extract country code from geo string
+    country_flag = geo.split()[-1] if geo else ""
+    is_foreign = country_flag != "🇰🇪"
+
+    theme = random.choice(suspicious_themes if is_foreign else themes)
     return (
         f"{theme}\n"
         f"👤 <b>User:</b> <code>{user}</code>\n"
@@ -50,4 +69,5 @@ def themed_caption(ip, user, time, geo):
         f"🌐 <b>IP:</b> <code>{ip}</code>\n"
         f"🌍 <b>Location:</b> {geo}"
     )
+
 
