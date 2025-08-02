@@ -9,7 +9,7 @@ from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
 from handlers.loginstats import router as loginstats_router
 from handlers.authgrep import router as authgrep_router
-from utils.authlog import get_last_login, geo_lookup, record_login
+from utils.authlog import get_last_login, geo_lookup, record_login, load_login_stats  # ✅ load stats
 from utils.captions import themed_caption
 
 # 🦔 Bot setup
@@ -35,7 +35,7 @@ async def monitor_logins():
                 await bot.send_message(chat_id=ADMIN_ID, text=caption)
                 print(f"🦔 Alert sent for {user} @ {ip}")
                 _last_alert = alert_key
-                record_login(ip, user, time, country_code)  # ✅ Pass clean code
+                record_login(ip, user, time, country_code)  # ✅ Persist login
         except Exception as e:
             print(f"⚠️ Auth monitor error: {e}")
         await asyncio.sleep(10)
@@ -56,10 +56,10 @@ async def start_handler(msg: Message):
 # 🚀 Main entry
 async def main():
     print("🦔 AuthGlyph deployed successfully.")
+    load_login_stats()  # ✅ Restore login history on reboot
     asyncio.create_task(monitor_logins())
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
-
 
