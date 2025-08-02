@@ -96,7 +96,7 @@ def load_login_stats():
             print(f"[ERROR] Failed to load login stats: {e}")
 
 # 🧾 Record login for stats and grep
-def record_login(ip, user, time, country=""):
+def record_login(ip, user, time, country="", whois="Unknown"):
     global _last_login, _login_counter
     _last_login = (ip, user, time)
     _login_counter += 1
@@ -104,7 +104,8 @@ def record_login(ip, user, time, country=""):
         "ip": ip,
         "user": user,
         "time": time,
-        "country": country
+        "country": country,
+        "whois": whois
     })
     save_login_stats()  # ✅ Persist after each login
 
@@ -120,5 +121,7 @@ def search_logins(query: str):
         if query in entry["user"].lower()
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
+        or query in entry.get("whois", "").lower()  # ✅ WHOIS searchable
     ]
+
 
