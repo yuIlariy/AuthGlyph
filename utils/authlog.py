@@ -17,7 +17,8 @@ _login_records = []
 _login_counter = 0
 _last_login = ("N/A", "N/A", "N/A")
 
-STATS_FILE = "logs/logins.json"  # ✅ Persistent storage path
+STATS_FILE = "logs/logins.json"
+BASE_COUNTRY_CODE = "KE"  # ☄️ Kenya is home
 
 # 🔍 Read system logs
 def read_auth_log():
@@ -61,7 +62,7 @@ def geo_lookup(ip):
         r = requests.get(GEO_API + ip, timeout=5).json()
         city = r.get("city", "Unknown")
         country = r.get("country", "Unknown")
-        code = r.get("countryCode", "")
+        code = r.get("countryCode", "").upper()
         flag = country_flag(code)
         geo_str = f"{city}, {country} {flag}"
         return geo_str, code
@@ -104,10 +105,10 @@ def record_login(ip, user, time, country="", whois="Unknown"):
         "ip": ip,
         "user": user,
         "time": time,
-        "country": country,
+        "country": country.upper(),  # ✅ Normalize to ISO code
         "whois": whois
     })
-    save_login_stats()  # ✅ Persist after each login
+    save_login_stats()
 
 # 📊 Total login count
 def get_login_count():
@@ -121,7 +122,11 @@ def search_logins(query: str):
         if query in entry["user"].lower()
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
-        or query in entry.get("whois", "").lower()  # ✅ WHOIS searchable
+        or query in entry.get("whois", "").lower()
     ]
+
+# 🔥 Foreign login check
+def is_foreign(entry: dict) -> bool:
+    return entry.get("country", "").upper() != BASE_COUNTRY_CODE
 
 
