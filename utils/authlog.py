@@ -3,13 +3,19 @@ import subprocess
 import requests
 from config import GEO_API, AUTH_LOG_PATH
 
-# Supported login patterns
+# 🧠 Supported login patterns
 LOGIN_PATTERNS = [
     r"Accepted password for (\w+) from ([\d\.]+)",
     r"Accepted publickey for (\w+) from ([\d\.]+)",
     r"Accepted keyboard-interactive/pam for (\w+) from ([\d\.]+)"
 ]
 
+# 🧱 In-memory login store
+_login_records = []
+_login_counter = 0
+_last_login = ("N/A", "N/A", "N/A")
+
+# 🔍 Read system logs
 def read_auth_log():
     try:
         with open(AUTH_LOG_PATH, "r") as f:
@@ -25,6 +31,7 @@ def read_auth_log():
             print(f"[ERROR] Failed to read logs: {e}")
             return []
 
+# 🔎 Extract login line
 def extract_login(line):
     for pattern in LOGIN_PATTERNS:
         match = re.search(pattern, line)
@@ -35,6 +42,7 @@ def extract_login(line):
             return ip, user, time
     return None
 
+# 🧠 Get latest login from logs
 def get_last_login():
     lines = read_auth_log()
     for line in reversed(lines):
@@ -43,6 +51,7 @@ def get_last_login():
             return result
     return "N/A", "N/A", "N/A"
 
+# 🌍 Geo IP lookup with country flag
 def geo_lookup(ip):
     try:
         r = requests.get(GEO_API + ip, timeout=5).json()
@@ -60,22 +69,11 @@ def country_flag(code):
         return ""
     return chr(ord(code[0].upper()) + 127397) + chr(ord(code[1].upper()) + 127397)
 
-
-_login_counter = 0
-_last_login = ("N/A", "N/A", "N/A")
-
-def record_login(ip, user, time):
+# 🧾 Record login for stats and grep
+def record_login(ip, user, time, country=""):
     global _last_login, _login_counter
     _last_login = (ip, user, time)
     _login_counter += 1
-
-def get_login_count():
-    return _login_counter
-
-
-_login_records = []
-
-def record_login(ip, user, time, country=""):
     _login_records.append({
         "ip": ip,
         "user": user,
@@ -83,6 +81,11 @@ def record_login(ip, user, time, country=""):
         "country": country
     })
 
+# 📊 Total login count
+def get_login_count():
+    return _login_counter
+
+# 🔍 Search login records
 def search_logins(query: str):
     query = query.lower()
     return [
@@ -91,5 +94,4 @@ def search_logins(query: str):
         or query in entry["ip"].lower()
         or query in entry.get("country", "").lower()
     ]
-
 
