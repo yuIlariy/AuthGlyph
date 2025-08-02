@@ -9,8 +9,9 @@ from config import TOKEN, ADMIN_ID
 from handlers.authwatcher import router as authwatch_router
 from handlers.loginstats import router as loginstats_router
 from handlers.authgrep import router as authgrep_router
-from utils.authlog import get_last_login, geo_lookup, record_login, load_login_stats  # ✅ load stats
+from utils.authlog import get_last_login, geo_lookup, record_login, load_login_stats
 from utils.captions import themed_caption
+from utils.whois import whois_info  # ✅ WHOIS module
 
 # 🦔 Bot setup
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -30,12 +31,13 @@ async def monitor_logins():
             ip, user, time = get_last_login()
             alert_key = f"{user}|{ip}|{time}"
             if alert_key != _last_alert and ip != "N/A":
-                geo_str, country_code = geo_lookup(ip)  # ✅ Unpack both
-                caption = themed_caption(ip, user, time, geo_str)
+                geo_str, country_code = geo_lookup(ip)
+                whois = whois_info(ip)  # ✅ Get WHOIS info
+                caption = themed_caption(ip, user, time, geo_str, whois)  # ✅ Modular caption
                 await bot.send_message(chat_id=ADMIN_ID, text=caption)
                 print(f"🦔 Alert sent for {user} @ {ip}")
                 _last_alert = alert_key
-                record_login(ip, user, time, country_code)  # ✅ Persist login
+                record_login(ip, user, time, country_code, whois)  # ✅ Persist WHOIS
         except Exception as e:
             print(f"⚠️ Auth monitor error: {e}")
         await asyncio.sleep(10)
@@ -56,7 +58,7 @@ async def start_handler(msg: Message):
 # 🚀 Main entry
 async def main():
     print("🦔 AuthGlyph deployed successfully.")
-    load_login_stats()  # ✅ Restore login history on reboot
+    load_login_stats()
     asyncio.create_task(monitor_logins())
     await dp.start_polling(bot)
 
