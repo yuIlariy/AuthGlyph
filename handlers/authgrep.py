@@ -6,6 +6,11 @@ from utils.glyphs import flag_emoji
 
 router = Router()
 
+def safe_flag(code: str) -> str:
+    if not code or len(code) != 2 or not code.isalpha():
+        return "🌍"
+    return flag_emoji(code)
+
 @router.message(lambda msg: msg.text.startswith("/authgrep") and msg.from_user.id == ADMIN_ID)
 async def authgrep(msg: Message):
     args = msg.text.split(maxsplit=1)
@@ -29,8 +34,9 @@ async def authgrep(msg: Message):
         ip = entry['ip']
         time = entry['time']
         country = entry.get('country', '')
-        flag = flag_emoji(country)
+        flag = safe_flag(country)
         lines.append(f"🧍 <b>{user}</b>\n • {time} — <code>{ip}</code> {flag}")
 
     await msg.answer("\n".join(lines), parse_mode="HTML")
+
 
